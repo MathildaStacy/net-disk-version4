@@ -133,6 +133,7 @@ int deleteUserStackByStackName(MultiUserStack_t *multi_user_stack, const char *u
         if(multi_user_stack->UsersStack[i] != NULL && strcmp(multi_user_stack->UsersStack[i]->userName, userName) == 0)
         {
             freeStack(multi_user_stack->UsersStack[i]);
+            multi_user_stack->UsersStack[i] = NULL;
             return 0; //成功找到并删除
         }
     }

@@ -6,10 +6,10 @@
 #include "russian_roulette.h"
 
 
-extern WheelNode wheel[WHEEL_SIZE];  // 时间轮盘
-extern HashMapEntry hashMap[1024];  // 映射表，应根据实际情况调整大小
+WheelNode wheel[WHEEL_SIZE];  // 时间轮盘
+HashMapEntry hashMap[1024];  // 映射表，应根据实际情况调整大小
 
-extern int currentTimeIndex;  // 当前时间轮盘指针的位置
+int currentTimeIndex = 0;  // 当前时间轮盘指针的位置
 
 
 // 哈希函数
@@ -145,65 +145,111 @@ int printKickout(ElementID *arr, int n)
 
     return 0;
 }
-
-/*
-int main() {
-    // 初始化时间轮和映射表
-    initWheel();
-    initHashMap();
-    ElementID kickout_arr[1024] = { 0 };
-
-    // 插入几个测试元素
-    ElementID ele = {1};
-    insertElement(ele);
-    sleep(1);
-    int nums = updateTimeWheel(kickout_arr, 1024);
-    printKickout(kickout_arr, nums);
-    printWheel();
-    printf("After %d second(s):\n", 1);
-
-    ele.id = 2;
-    insertElement(ele);
-    sleep(1);
-    nums = updateTimeWheel(kickout_arr, 1024);
-    printKickout(kickout_arr, nums);
-    printWheel();
-    printf("After %d second(s):\n", 2);
-
-    ele.id = 3;
-    insertElement(ele);
-    sleep(1);
-    nums = updateTimeWheel(kickout_arr, 1024);
-    printKickout(kickout_arr, nums);
-    printWheel();
-    printf("After %d second(s):\n", 3);
-
-    ele.id = 1;
-    insertElement(ele);
-    sleep(1);
-    nums = updateTimeWheel(kickout_arr, 1024);
-    printKickout(kickout_arr, nums);
-    printWheel();
-    printf("After %d second(s):\n", 4);
-
-    ele.id = 4;
-
-    int count = 5;
-    while(1)
-    {
-        
-        insertElement(ele);
-        ele.id++;
-        insertElement(ele);
-        ele.id++;
-        sleep(1);
-        nums = updateTimeWheel(kickout_arr, 1024);
-        printKickout(kickout_arr, nums);
-        printWheel();
-        printf("After %d second(s):\n", count);
-        count++;
+int removeElementById(int id) {
+    // 计算哈希索引
+    unsigned int hashIndex = hashFunction(id);
+    // 通过hashMap查找该元素是否已存在
+    if (hashMap[hashIndex].nodePtr != NULL && hashMap[hashIndex].nodePtr->element.id == id) {
+        // 如果映射表中有该元素并且ID匹配，则直接定位到时间轮的具体位置并移除
+        int position = hashMap[hashIndex].wheelPosition;
+        SetNode **ptr = &(wheel[position].setHead);
+        while (*ptr) {
+            SetNode *entry = *ptr;
+            if (entry->element.id == id) {
+                // 找到匹配，从链表中移除
+                *ptr = entry->next;
+                free(entry);
+                // 更新哈希表
+                hashMap[hashIndex].wheelPosition = -1;
+                hashMap[hashIndex].nodePtr = NULL;
+                return 0;
+            }
+            ptr = &((*ptr)->next);
+        }
+    } else {
+        // 如果在哈希映射表中没有找到，需要遍历整个时间轮来查找并尝试移除
+        for (int i = 0; i < WHEEL_SIZE; i++) {
+            SetNode **ptr = &(wheel[i].setHead);
+            while (*ptr) {
+                SetNode *entry = *ptr;
+                if (entry->element.id == id) {
+                    // 找到匹配，从链表中移除
+                    *ptr = entry->next;
+                    free(entry);
+                    // 更新哈希表，即使原本哈希表中未正确指向该元素，现在确保它表明该ID不存在
+                    hashMap[hashIndex].wheelPosition = -1;
+                    hashMap[hashIndex].nodePtr = NULL;
+                    return 0;
+                }
+                ptr = &((*ptr)->next);
+            }
+        }
     }
 
-    return 0;
+    // 时间轮中不存在此id的元素
+    return -1;
+}
+
+
+
+/*
+   int main() {
+// 初始化时间轮和映射表
+initWheel();
+initHashMap();
+ElementID kickout_arr[1024] = { 0 };
+
+// 插入几个测试元素
+ElementID ele = {1};
+insertElement(ele);
+sleep(1);
+int nums = updateTimeWheel(kickout_arr, 1024);
+printKickout(kickout_arr, nums);
+printWheel();
+printf("After %d second(s):\n", 1);
+
+ele.id = 2;
+insertElement(ele);
+sleep(1);
+nums = updateTimeWheel(kickout_arr, 1024);
+printKickout(kickout_arr, nums);
+printWheel();
+printf("After %d second(s):\n", 2);
+
+ele.id = 3;
+insertElement(ele);
+sleep(1);
+nums = updateTimeWheel(kickout_arr, 1024);
+printKickout(kickout_arr, nums);
+printWheel();
+printf("After %d second(s):\n", 3);
+
+ele.id = 1;
+insertElement(ele);
+sleep(1);
+nums = updateTimeWheel(kickout_arr, 1024);
+printKickout(kickout_arr, nums);
+printWheel();
+printf("After %d second(s):\n", 4);
+
+ele.id = 4;
+
+int count = 5;
+while(1)
+{
+
+insertElement(ele);
+ele.id++;
+insertElement(ele);
+ele.id++;
+sleep(1);
+nums = updateTimeWheel(kickout_arr, 1024);
+printKickout(kickout_arr, nums);
+printWheel();
+printf("After %d second(s):\n", count);
+count++;
+}
+
+return 0;
 }
 */

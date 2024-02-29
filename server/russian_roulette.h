@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 
-#define TIMEOUT 6  // 超时阈值
+#define TIMEOUT 30  // 超时阈值
 #define WHEEL_SIZE TIMEOUT  // 时间轮大小
 
 // 新定义的 ElementID 结构体
@@ -34,11 +34,17 @@ typedef struct {
     SetNode *nodePtr;  // 指向集合中元素的指针
 } HashMapEntry;
 
-WheelNode wheel[WHEEL_SIZE];  // 时间轮盘
-HashMapEntry hashMap[1024];  // 映射表，应根据实际情况调整大小
+extern WheelNode wheel[WHEEL_SIZE];  // 时间轮盘
+extern HashMapEntry hashMap[1024];  // 映射表，应根据实际情况调整大小
 
-int currentTimeIndex = 0;  // 当前时间轮盘指针的位置
+extern int currentTimeIndex;  // 当前时间轮盘指针的位置
 
 int updateTimeWheel(ElementID *kickout, int length);
-
+void initWheel();
+void initHashMap();
+void insertElement(ElementID eid);
+void removeElement(int id);
+void updateElement(ElementID eid);
+void initHashMap();
+int removeElementById(int id);
 #endif
