@@ -2,6 +2,7 @@
 #include "hsqdef.h"
 #include "train.h"
 #include "pwd.h"
+#include "sql.h"
 //#include "logger.h"
 #include <openssl/sha.h>
 #include <sys/file.h>
@@ -91,15 +92,15 @@
         return -1;
     }
     long filesize = file_stat.st_size;
-    lseek(opfd,offset,SEEK_SET);
+    printf("-----now offset is %ld\n",offset);
     //trans filesize ,let getpart konw how long they need get
     char filesize_buf[1024];
     memcpy(filesize_buf,&filesize,sizeof(filesize));
     msgtrans(filesize_buf,netfd);
+    lseek(opfd,offset,SEEK_SET);
     rret = sendfile(netfd , opfd , 0 , filesize-offset);
     ERROR_CHECK(rret, -1 ,"sendfile");
     close(opfd);
-    printf("puts over\n");
     return 0;
 }
 
@@ -144,6 +145,7 @@
           cursize += getrecv;
           write(opfd,buf,getrecv);
         }
+
     }
     printf("get over\n");
     return 0;
@@ -303,6 +305,7 @@ int commandPuts_C(char* filename,int sockfd)
         msgrecv(offsetbuf,sockfd);
         off_t offset ;
         memcpy(&offset,offsetbuf,sizeof(off_t));
+        printf("----server offset is %ld",offset);
         //通过文件偏移量传输文件
         int putret = putsfile(filename,sockfd,offset);
         if(putret == -1)
@@ -312,6 +315,7 @@ int commandPuts_C(char* filename,int sockfd)
         }
         //check get msg 1 is ok ,0 is erro
         char checkbuf[3];
+        printf("puts over\n");
         msgrecv(checkbuf,sockfd);
         if(strcmp(checkbuf,"1")==0)
         {
@@ -319,7 +323,7 @@ int commandPuts_C(char* filename,int sockfd)
         }
         else
         {
-            printf("erro\n");
+            printf("hash erro\n");
         }
         return 0;
     }

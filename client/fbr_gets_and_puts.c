@@ -1,5 +1,6 @@
 #include "fbr_gets_and_puts.h"
 #include "train.h"
+#include "sql.h"
 //#include "logger.h"
 #include <strings.h>
 #include <sys/types.h>
@@ -79,12 +80,14 @@ long updateOffsetRecord(const char *filename, long offset, int reset) {
         long storedOffset;
         if (read(fd, &storedOffset, sizeof(storedOffset)) != sizeof(storedOffset))
             storedOffset = 0;
+        printf("fbr gets.c line 83 fd before close is %d\n", fd);
         close(fd);
         return storedOffset;
     } else {
         int fd = open(recordFilename, O_RDWR | O_CREAT, 0666);
         if (fd == -1) return 0;
         write(fd, &offset, sizeof(offset));
+        printf("fbr gets.c line 90 fd before close is %d\n", fd);
         close(fd);
         return offset;
     }
@@ -98,7 +101,8 @@ void createAndWriteIfNotExists(const char* filePath) {
     if(stat(filePath, &buffer) != 0) {
         // 如果不存在，创建文件并写入long类型的0
         printf("filename is %s\n", filePath);
-        fd = open(filePath, O_RDWR | O_CREAT, 0666); // 创建文件，如果文件不存在
+        fd = open(filePath, O_RDWR | O_CREAT, 0666);// 创建文件，如果文件不存在
+        printf("fbr gets.c 105 fd is %d\n", fd);
         if (fd == -1) {
             perror("open");
             return; // 打开或创建文件失败
@@ -107,6 +111,7 @@ void createAndWriteIfNotExists(const char* filePath) {
         long zero = 0;
         if(write(fd, &zero, sizeof(zero)) != sizeof(zero)) {
             perror("write");
+            printf("fbr gets.c line 113 fd before close is %d\n", fd);
             close(fd);
             return; // 写入失败
         }
@@ -115,10 +120,13 @@ void createAndWriteIfNotExists(const char* filePath) {
     } else {
         printf("文件已存在。\n");
     }
-
+    /*
     if (fd != -1) {
+        printf("fbr gets.c line 124 fd before close is %d\n", fd);
         close(fd); // 关闭文件描述符
     }
+    */
+
 }
 
 
@@ -126,7 +134,7 @@ int recvFile(int sockfd, const char* sha1) {
     char filename[256] = {0};
     long fileSize;
     off_t offset = 0;
-
+    //sha1是文件名
     strcpy(filename, sha1);
     fileSize = strlen(filename);
     //向服务端用小火车发送文件名  1
@@ -163,6 +171,7 @@ int recvFile(int sockfd, const char* sha1) {
         printf("Failed to receive file size.\n");
         return -1;
     }
+    printf("fbr gets.c 174\n");
     printf("recved file size = %ld\n", fileSize);
 
     int fd = open(filename, O_RDWR | O_CREAT, 0666);
@@ -172,10 +181,10 @@ int recvFile(int sockfd, const char* sha1) {
     }
 
     //打开后对文件上锁
-    if(flock(fd, LOCK_EX) == -1)
-    {
-        return -1;
-    } 
+    //if(flock(fd, LOCK_EX) == -1)
+    //{
+    //    return -1;
+    //} 
 
     //向服务端发送偏移量  4  握手完毕
     offset = updateOffsetRecord(filename, -1, 0);
@@ -184,6 +193,7 @@ int recvFile(int sockfd, const char* sha1) {
 
     if (offset >= fileSize) {
         updateOffsetRecord(filename, 0, 1);
+        printf("fbr gets.c line 192 fd before close is %d\n", fd);
         close(fd);
         printf("File already completely received, skipping download.\n");
         return 0;
@@ -196,9 +206,11 @@ int recvFile(int sockfd, const char* sha1) {
     void *mapped = mmap(NULL, fileSize, PROT_WRITE, MAP_SHARED, fd, 0);
     if (mapped == MAP_FAILED) {
         perror("mmap error");
+        printf("fbr gets.c line 205 fd before close is %d\n", fd);
         close(fd);
         return -1;
     }
+    printf("fbr gets.c line 209 fd before close is %d\n", fd);
     close(fd); // 映射后可以关闭文件描述符
     int recv_count = 0;
     while (offset < fileSize) {
@@ -279,6 +291,7 @@ int sendFile(int sockfd, const char *sha1)
     off_t fileSize = lseek(fd, 0, SEEK_END);
     if (fileSize == -1) {
         perror("Seek Error");
+        printf("fbr gets.c line 290 fd before close is %d\n", fd);
         close(fd);
         return -1;
     }
@@ -303,6 +316,7 @@ int sendFile(int sockfd, const char *sha1)
     
     
     
+    printf("fbr gets.c line 315 fd before close is %d\n", fd);
     close(fd);
     flock(fd, LOCK_UN);
     return 0; // 成功完成传输
@@ -412,5 +426,7 @@ int client_download(int sockfd, const char *file_name)
     
     printf("file name :%s\n", file_name);
     recvFile(sockfd, file_name);
+    printf("client download successfully exit.\n");
+    return 0;
 }
 

@@ -11,9 +11,9 @@ int exePanClient(int sockfd, char*usrname, char* token){
     sprintf(bufPrintf, "%s%s",usrname,":~$ ");
     
     //设置子线程属性为自动释放资源
-    pthread_attr_t attr;
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    //pthread_attr_t attr;
+   // pthread_attr_init(&attr);
+   // pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
     while(1){
 
         //打印命令行提示信息///////////////////////////////////////////////////////////////
@@ -134,15 +134,11 @@ int exePanClient(int sockfd, char*usrname, char* token){
             //2 创建子线程
             pthread_t pid;
             pthread_create(&pid, NULL, threadworker,(void*)porder);
-
-
-
-
             printf("--------------------------------exePanClien.c\n");
 
         }
     }//while 循环结束, 网盘业务结束，退出
-    pthread_attr_destroy(&attr);
+   // pthread_attr_destroy(&attr);
     return 0;
 }
     

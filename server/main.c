@@ -12,7 +12,7 @@
 #include "rmMakeDir.h"
 #include "loginAndRegister.h"
 #include "logger.h"
-#include "russian_roulette.h"
+//#include "russian_roulette.h"
 int exitPipe[2];
 void handler(int signum){
     printf("signum = %d\n", signum);
@@ -20,9 +20,9 @@ void handler(int signum){
 }
 int main(int argc, char *argv[])
 {
-    g_log_level = 0;
-    initWheel();
-    initHashMap();
+    g_log_level = 3;
+//    initWheel();
+  //  initHashMap();
 
     // ./server 192.168.72.128 1234 4
     ARGS_CHECK(argc,4);
@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     MYSQL* conn = mysql_init(NULL);
     LOG_DEBUG("here");
     char *host = "localhost";
-    char *user = "root";
+    char *user = "1211123";
     char *password = "123456";
     char *database = "netdisk";
     LOG_DEBUG("here");
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
     LOG_DEBUG("here");
     while(1){
 
-        ElementID kickout_arr[1024] = {0};
+   //     ElementID kickout_arr[1024] = {0};
         LOG_DEBUG("here");
         struct epoll_event readySet[1024];
         int readyNum = epoll_wait(epfd,readySet,1024,1000);
@@ -109,8 +109,8 @@ int main(int argc, char *argv[])
                 LOG_DEBUG("here");
                 int netfd = accept(sockfd,NULL,NULL);
                 //加入时间轮
-                ElementID ele = {netfd};
-                insertElement(ele);
+    //            ElementID ele = {netfd};
+     //           insertElement(ele);
                 LOG_DEBUG("here");
                 epollAdd(epfd,netfd);
             }
@@ -165,8 +165,8 @@ int main(int argc, char *argv[])
                     
                     //相应的netfd更新时间轮/////////////////////////////////////////////////////////
                     //
-                    ElementID ele ={netfd};
-                    insertElement(ele);
+      //              ElementID ele ={netfd};
+      //              insertElement(ele);
 
                     LOG_DEBUG("here");
                     switch(order.cmd){
@@ -284,7 +284,7 @@ int main(int argc, char *argv[])
                     //把netfd移除监听集合///////////////////关键一步//////////////////////////
                     epollDel(epfd,netfd);
                     //把netfd移除时间轮//////////////////////////////////////////////////////
-                    removeElementById(netfd);
+       //             removeElementById(netfd);
 
                     LOG_DEBUG("here");
 
@@ -336,13 +336,13 @@ int main(int argc, char *argv[])
 
         }
         //更新时间轮,踢人集合////////////////////////////////////////////////////////////////////////////////////
-        int nums = updateTimeWheel(kickout_arr,1024);
-        for(int i = 0; i < nums; ++i){
-            //超时踢人/////////////////////////////////////////////////////////////////////////////////
-            printf("kick out  netfd = %d\n", kickout_arr[i].id);
-            close(kickout_arr[i].id);
-            
-        }
+ //       int nums = updateTimeWheel(kickout_arr,1024);
+ //       for(int i = 0; i < nums; ++i){
+ //           //超时踢人/////////////////////////////////////////////////////////////////////////////////
+ //           printf("kick out  netfd = %d\n", kickout_arr[i].id);
+ //           close(kickout_arr[i].id);
+ //           
+ //       }
     }
     return 0;
 }

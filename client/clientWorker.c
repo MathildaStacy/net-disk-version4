@@ -11,9 +11,10 @@ void* threadworker(void* arg){
     int sockfd = socket(AF_INET,SOCK_STREAM,0);
     struct sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(2000);
-    serverAddr.sin_addr.s_addr = inet_addr("192.168.189.133");
+    serverAddr.sin_port = htons(1234);
+    serverAddr.sin_addr.s_addr = inet_addr("192.168.96.128");
     int ret = connect(sockfd,(struct sockaddr *)&serverAddr,sizeof(serverAddr));
+    printf("------------ret =%d\n",ret);
     //ERROR_CHECK(ret,-1,"connect");
     
     //2 向服务端发送命令结构体信息/////////////////////////////////////////////////////////
@@ -35,7 +36,7 @@ void* threadworker(void* arg){
 
          case PUTS:
             {
-                printf("filename = %s,len = %ld\n",porder->parameters[0],strlen(porder->parameters[0]));                
+                printf("puts begin \nfilename = %s,len = %ld\n",porder->parameters[0],strlen(porder->parameters[0]));                
                 int ret = commandPuts_C(porder->parameters[0],sockfd);
                 if(ret == -1){
                     printf("上传失败\n");

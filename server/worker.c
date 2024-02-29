@@ -65,7 +65,7 @@ void * threadFunc(void *arg){
         MYSQL* conn = mysql_init(NULL);
         LOG_DEBUG("here");
         char *host = "localhost";
-        char *user = "root";
+        char *user = "1211123";
         char *password = "123456";
         char *database = "netdisk";
         LOG_DEBUG("filename =|%s|,len =%ld",porder->parameters[0],strlen(porder->parameters[0]));
@@ -94,6 +94,7 @@ void * threadFunc(void *arg){
                 LOG_DEBUG("dirstack.user = |%s|, pwd = |%s|, head_file_id = %d", dirstack->userName, pwdStr, head_file_id);
                 LOG_DEBUG("tread_netfd: %d", netfd);
                 //传输
+                printf("----------------puts begin\n");
                 commandPuts_S(conn, dirstack, netfd);
                 LOG_DEBUG("here");
                 break;
