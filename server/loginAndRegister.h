@@ -1,5 +1,5 @@
-#ifndef __LOGINANDREGISTER_H__
-#define __LOGINANDREGISTER_H__
+#ifndef __LOGINANDREGISTER__
+#define __LOGINANDREGISTER__
 
 #include "hsqdef.h"
 #include "analyOrder.h"
@@ -36,11 +36,17 @@ typedef struct file_data
                 ret=recv(netfd,fileData.dataBuf,fileData.dataLen,0);\
                 ERROR_CHECK(ret,-1,"recv");}              
 
-int SignIn_Deal(int netfd, MYSQL *conn);
+
+void generateSalt(char *salt);
+int SignIn_Deal(int netfd,MYSQL *conn);
 int LogIn_Deal(int netfd, char *username, MYSQL *conn);
-int NetDiskInterface(int netfd, MYSQL *conn, char *username);
-int userRegister(char *username, int netfd);
-int userLogin(char *username, int netfd);
+int userRegister(order_t *order, int netfd);
+int userLogin(order_t *order, int netfd);
+int getToken(int sockfd, char *token);
+int NetDiskInterface(int netfd, char *username, MYSQL *conn);
 int getCommand(int netfd, order_t* porder);
 
+char *createToken(const char *username);
+bool verifyToken(const char *username, const char *jwt);
+int cpToken(const char *username , char *token);
 #endif

@@ -28,15 +28,15 @@ int main(int argc, char *argv[])
     ARGS_CHECK(argc,4);
     LOG_DEBUG("here1");
 
-    pipe(exitPipe);
+   // pipe(exitPipe);
     LOG_DEBUG("here");
-    if(fork()!= 0){
-        close(exitPipe[0]);
-        signal(SIGUSR1,handler);
-        wait(NULL);
-        printf("Parent is going to exit!\n");
-        exit(0);
-    }
+   // if(fork()!= 0){
+   //     close(exitPipe[0]);
+   //     signal(SIGUSR1,handler);
+   //     wait(NULL);
+   //     printf("Parent is going to exit!\n");
+   //     exit(0);
+   // }
     LOG_DEBUG("here");
     //
     threadPool_t threadPool;
@@ -141,10 +141,13 @@ int main(int argc, char *argv[])
                 order_t order;
                 memset(&order,0,sizeof(order));
                 LOG_DEBUG("here");
+                LOG_DEBUG("order size = %ld\n", sizeof(order_t));
+                
+                //后期改为小火车/////////////////////////////////////////////////////////////
                 int ret_recvOrder = recv(readySet[i].data.fd, &order,sizeof(order_t),MSG_WAITALL);
-                LOG_DEBUG("cmd = %d\n",order.cmd);
+                LOG_DEBUG("cmd = %d, ret size = %ld\n",order.cmd, ret_recvOrder);
                 LOG_DEBUG("here");
-
+                
                 // 3.0 关闭netfd的逻辑，判断客户端是否退出的逻辑
                 if(ret_recvOrder == 0){     
                     //客户端主动断开连接或者异常断开
@@ -243,7 +246,8 @@ int main(int argc, char *argv[])
                             // 3.2 执行登录业务模块////////////////////////////////////////////////
                             char username[64] = {0};
                             LOG_DEBUG("here");
-                            NetDiskInterface(netfd, conn, username);
+                            NetDiskInterface(netfd, username, conn);
+                            
                             deleteUserStackByStackName(&multiUserStack, username);
                             LOG_DEBUG("here");
                             strcpy(dirstack->userName,username);
@@ -255,6 +259,11 @@ int main(int argc, char *argv[])
 
                             insertUserStack(&multiUserStack, dirstack);
                             LOG_DEBUG("here");
+                            
+                            char buf[1024]={0};
+                            
+                            recv(netfd,buf,1024,0);
+                            printf("----------buf = %s\n",buf);
                             break;
                         }
 
@@ -332,8 +341,6 @@ int main(int argc, char *argv[])
 
                 }
             }
-
-
         }
         //更新时间轮,踢人集合////////////////////////////////////////////////////////////////////////////////////
         int nums = updateTimeWheel(kickout_arr,1024);

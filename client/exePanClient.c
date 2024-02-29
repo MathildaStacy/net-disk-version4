@@ -5,6 +5,7 @@
 #include "fbr_gets_and_puts.h"
 #include "others.h"
 #include "clientWorker.h"
+#include "trans_all.h"
 int exePanClient(int sockfd, char*usrname, char* token){
 
     char bufPrintf[1024] = {0};//保存当前命令行提示符信息
@@ -54,6 +55,7 @@ int exePanClient(int sockfd, char*usrname, char* token){
             //短命令
             //直接向客户端发送信息
             ssize_t retSend = send(sockfd,&order,sizeof(order),0);
+            printf("retsend = %ld, order size = %ld\n",retSend, sizeof(order));
             ERROR_CHECK(retSend, -1,"send order");
 
             switch(order.cmd){

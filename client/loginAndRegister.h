@@ -1,7 +1,8 @@
-#ifndef __LOGINANDREGISTER_H__
-#define __LOGINANDREGISTER_H__
+#ifndef __LOGINANDREGISTER__
+#define __LOGINANDREGISTER__
 
 #include "hsqdef.h"
+#include "analyOrder.h"
 
 typedef struct file_data
 {
@@ -9,11 +10,6 @@ typedef struct file_data
     char dataBuf[1000];
 }File_Data_t;
 
-typedef struct {
-    int cmd;
-    char username[64];
-    char token[512];
-} command;
 
 #define SEND_SUCCESS {bzero(&fileData,sizeof(fileData));\
                 bzero(sendBuf,sizeof(sendBuf));\
@@ -40,11 +36,12 @@ typedef struct {
                 ret=recv(netfd,fileData.dataBuf,fileData.dataLen,0);\
                 ERROR_CHECK(ret,-1,"recv");}              
 
-int SignIn_Deal(int netfd, MYSQL *conn);
-int LogIn_Deal(int netfd, char *username, MYSQL *conn);
-int NetDiskInterface(int netfd, MYSQL *conn, char *username);
-int userRegister(char *username, int netfd);
-int userLogin(char *username, int netfd);
-int getToken(int sockfd, char *token);
 
+void generateSalt(char *salt);
+int SignIn_Deal(int netfd,MYSQL *conn);
+int LogIn_Deal(int netfd, char *username, MYSQL *conn);
+int userRegister(order_t *order, int netfd);
+int NetDiskInterface(int netfd, MYSQL *conn);
+int userLogin(order_t *order, int netfd);
+int getToken(int sockfd, char *token);
 #endif

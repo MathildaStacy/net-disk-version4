@@ -21,6 +21,7 @@ typedef struct order_s{
     char parameters[10][32];
     int num; //参数的最大数量
     char username[64];//
+    char password[32];
     char token[512];//令牌
 }order_t;
 

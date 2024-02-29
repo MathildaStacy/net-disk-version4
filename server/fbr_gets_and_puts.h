@@ -12,4 +12,7 @@ int client_download(int sockfd, const char *file_name);
 
 int server_send(MYSQL *conn, dirStackType *dirStk, const char *file_name, int sockfd);
 
+int recvn(int sockfd, void* buf, long size);
+
+int sendn(int sockfd, const void* buf, long size);
 #endif

@@ -53,6 +53,7 @@ int orderInit(order_t* porder){
         memset(porder->parameters[i],0,32);   
     }
     memset(porder->username,0,64);
+    memset(porder->password,0,32); 
     memset(porder->token,0,512);//token 置空
     return 0;
 }
