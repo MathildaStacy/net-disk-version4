@@ -38,12 +38,13 @@ int exePanClient(int sockfd, char*usrname, char* token){
         }
 
         //调试语句////////////////////////////////////////////////////////////////////////
+        /*
         printf("cmd = %d\n",order.cmd);//打印指令枚举
         for(int i = 0; i < order.num; ++i){
             //循环打印当前参数和参数大小
             printf("parameter = %s len = %ld\n",order.parameters[i],strlen(order.parameters[i]));
         }
-        printf("token = %s\n",order.token);//打印token
+        */
         //
 
         //判断长短命令选择执行分支
@@ -55,7 +56,7 @@ int exePanClient(int sockfd, char*usrname, char* token){
             //短命令
             //直接向客户端发送信息
             ssize_t retSend = send(sockfd,&order,sizeof(order),0);
-            printf("retsend = %ld, order size = %ld\n",retSend, sizeof(order));
+            //printf("retsend = %ld, order size = %ld\n",retSend, sizeof(order));
             ERROR_CHECK(retSend, -1,"send order");
 
             switch(order.cmd){
@@ -129,9 +130,9 @@ int exePanClient(int sockfd, char*usrname, char* token){
             //长命令
 
             //1 堆上分配空间来存储指令结构体
-            order_t* porder = (order_t* )malloc(sizeof(int)*2+10*32+64+512);
-            memset(porder,0,sizeof(int)*2+10*32+64+512);
-            memcpy(porder,&order,sizeof(int)*2+10*32+64+512);
+            order_t* porder = (order_t* )malloc(sizeof(order_t));
+            memset(porder,0,sizeof(order_t));
+            memcpy(porder,&order,sizeof(order_t));
 
             //2 创建子线程
             pthread_t pid;

@@ -13,6 +13,7 @@
 #include "loginAndRegister.h"
 #include "logger.h"
 #include "russian_roulette.h"
+#include <stdio.h>
 int exitPipe[2];
 void handler(int signum){
     printf("signum = %d\n", signum);
@@ -51,7 +52,7 @@ int main(int argc, char *argv[])
     LOG_DEBUG("here");
     char *host = "localhost";
     char *user = "root";
-    char *password = "123456";
+    char *password = "fbr6530@";
     char *database = "netdisk";
     LOG_DEBUG("here");
     MYSQL *ret = mysql_real_connect(conn,host,user,password,database,0,NULL,0);
@@ -327,7 +328,8 @@ int main(int argc, char *argv[])
                     LOG_DEBUG("here");
                     //
                     printf("I got 1 task!\n");
-                    // 分配任务
+                    printf("--------------order == %s   ,com = %d   ,username  =%s     \n",porder->parameters[0],porder->cmd,porder->username)
+                    ;// 分配任务
                     pthread_mutex_lock(&threadPool.mutex);
                     LOG_DEBUG("here");
                     enQueue(&threadPool.taskQueue,netfd,porder,dirstack);

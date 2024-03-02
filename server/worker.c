@@ -59,6 +59,10 @@ void * threadFunc(void *arg){
         pthread_mutex_unlock(&pthreadPool->mutex);
         LOG_DEBUG("here");
 
+        //打印order
+        printf("--------------order == %s   ,com = %d   ,username  =%s     \n",porder->parameters[0],porder->cmd,porder->username)
+                    ;
+
         // 2 连接数据库，每个线程建立自己与数据库的连接,线程不安全,上锁///////////////////////////
         pthread_mutex_lock(&pthreadPool->mutexMysql);
         LOG_DEBUG("here");
@@ -66,7 +70,7 @@ void * threadFunc(void *arg){
         LOG_DEBUG("here");
         char *host = "localhost";
         char *user = "root";
-        char *password = "123456";
+        char *password = "fbr6530@";
         char *database = "netdisk";
         LOG_DEBUG("filename =|%s|,len =%ld",porder->parameters[0],strlen(porder->parameters[0]));
         MYSQL *ret = mysql_real_connect(conn,host,user,password,database,0,NULL,0);

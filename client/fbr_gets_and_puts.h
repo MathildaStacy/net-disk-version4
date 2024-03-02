@@ -9,8 +9,5 @@ int recvFile(int sockfd, const char *sha1);
 
 int client_download(int sockfd, const char *file_name);
 
-int recvn(int sockfd, void* buf, long size);
-
-int sendn(int sockfd, const void* buf, long size);                                                                                                 
 
 #endif

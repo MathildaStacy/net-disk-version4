@@ -12,13 +12,13 @@ void* threadworker(void* arg){
     struct sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(2000);
-    serverAddr.sin_addr.s_addr = inet_addr("192.168.189.133");
+    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
     int ret = connect(sockfd,(struct sockaddr *)&serverAddr,sizeof(serverAddr));
     //ERROR_CHECK(ret,-1,"connect");
     
     //2 向服务端发送命令结构体信息/////////////////////////////////////////////////////////
     order_t* porder = (order_t* )arg;
-    int ret_sendCmd = send(sockfd,porder,sizeof(int)*2+10*32+64+512,0);
+    int ret_sendCmd = send(sockfd,porder,sizeof(order_t),0);
     int flag = 0;//验证标志位
     int ret_recvFlag = recv(sockfd, &flag, sizeof(int),0);
     if(ret_recvFlag == 0){

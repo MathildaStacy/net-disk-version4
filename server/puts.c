@@ -5,8 +5,10 @@
 #include "sql.h"
 //#include "logger.h"
 #include <openssl/sha.h>
+#include <stdio.h>
 #include <sys/file.h>
 #include <mysql/mysql.h>
+#include <unistd.h>
 #include "file_content_to_sha1.h"
 #define BUFSIZE 4096
 
@@ -100,7 +102,6 @@
     rret = sendfile(netfd , opfd , 0 , filesize-offset);
     ERROR_CHECK(rret, -1 ,"sendfile");
     close(opfd);
-    printf("puts over\n");
     return 0;
 }
 
@@ -111,18 +112,21 @@
     //get filesize
     char filesizebuf[1024];
     msgrecv(filesizebuf,sockfd);
+    printf("-----now full filesize = %s\n",filesizebuf);
     long filesize ;
     memcpy(&filesize,filesizebuf,sizeof(filesize));
+    printf("-----now full filesize = %ld\n",filesize);
     
     //得到文件大小，接收剩余大小
-    //------------------------------------------------------------
-    char buf [1];
-    int cursize = offset;
+    char buf [1];//改容器大小
+    long cursize = offset;
+    printf("-----now cur filesize = %ld\n",cursize);
+    printf("-----now need trans filesize = %ld\n",filesize-cursize);
+
     while(cursize<filesize)
     {
-        
-        int bufsize =sizeof(buf);
-        int getrecv;
+        int bufsize = sizeof(buf);
+        int getrecv=0;
         memset(buf,0,bufsize);
         if(filesize - cursize > bufsize )
         {
@@ -146,9 +150,9 @@
           cursize += getrecv;
           write(opfd,buf,getrecv);
         }
-        //-----------------------------------------------------------------
+        printf("正在上传中\n");
+        sleep(1);
     }
-    printf("get over\n");
     return 0;
 }
 int commandPuts_S(MYSQL * conn,dirStackType * virtual_path,int sockfd)
@@ -178,10 +182,6 @@ int commandPuts_S(MYSQL * conn,dirStackType * virtual_path,int sockfd)
     File isExist_file;
     //使用dbret判断是否存在，-1不存在，0存在，-2异常
     int dbret = dbFindFileBySha1(conn,hashbuf,&isExist_file);
-    printf("preid == %d\n    tomb ==%d\n   filename =%s\n   sha1=%s \n",isExist_file.pre_id,
-                                                        isExist_file.tomb,
-                                                        isExist_file.filename,
-                                                        isExist_file.sha1);
     if(dbret == 0)
     {
         msgtrans("1",sockfd);
@@ -288,11 +288,7 @@ int commandPuts_S(MYSQL * conn,dirStackType * virtual_path,int sockfd)
        //情况2：打开成功说明之前有文件
        else
        {
-           if (flock(opfd, LOCK_EX) < 0) 
-           { // 对文件加排它锁
-               perror("flock");
-               exit(EXIT_FAILURE);
-           }
+         
             struct stat file_stat;
             int rret = fstat(opfd,&file_stat);
             if(rret == -1)
@@ -301,7 +297,9 @@ int commandPuts_S(MYSQL * conn,dirStackType * virtual_path,int sockfd)
                 return -1;
             }
             offset = file_stat.st_size;
+            printf("------now size is %ld",offset);
            memcpy(offsetbuf,&offset,sizeof(offset));
+           //传输现在的大小
            rret =  msgtrans(offsetbuf,sockfd);
            if(rret == 1)
            {
@@ -309,16 +307,13 @@ int commandPuts_S(MYSQL * conn,dirStackType * virtual_path,int sockfd)
                return -1;
            }
        //发送完offset后开始接收
+           int lseekret = lseek(opfd,offset,SEEK_SET);
            getfile(sockfd,opfd,offset);
-           if (flock(opfd, LOCK_UN) < 0) 
-           { // 解锁文件
-               perror("flock");
-               exit(EXIT_FAILURE);
-           } 
        }
        //最后一次对比hash是否正确
        char jugehash[41];
        sha1file(hashbuf,jugehash);
+       
        if(strcmp(hashbuf,jugehash)==0)
        {
            //1 is ok;
@@ -354,13 +349,16 @@ int commandPuts_S(MYSQL * conn,dirStackType * virtual_path,int sockfd)
        }
        else
        {
+           //哈希不同删除
+           printf("jugehash =  %s",jugehash);
            char checkbuf[]="0";
            msgtrans(checkbuf,sockfd);
            printf("get erro\n");
-           if (unlink(hashbuf) != 0) {
-               perror("Failed to delete file");
-               exit(EXIT_FAILURE);
-           } 
+    //       if (unlink(hashbuf) != 0) {
+     //          perror("Failed to delete file");
+     //          exit(EXIT_FAILURE);
+     //      } 
+     //      return -1;
 
        }
        close(opfd);
@@ -390,11 +388,14 @@ int commandPuts_C(char* filename,int sockfd)
     msgrecv(checkbuf,sockfd);
     if(strcmp(checkbuf,"1")==0)
     {
-        printf("OK!\n");
+        printf("hash OK!\n");
+        printf("puts over\n");
     }
     else
     {
-        printf("erro\n");
+        printf("hash erro\n");
+        printf("puts failue\n");
+        return -1;
     }
     return 0;
 }

@@ -4,7 +4,7 @@
 int ls(int netfd, MYSQL *conn, dirStackType *dirStk) {
     int ret;
     int id;
-    if(!isEmpty(dirStk)){
+    if(isEmpty(dirStk)){
         id = -1;
     }
     getHead(dirStk, &id);

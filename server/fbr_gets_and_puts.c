@@ -112,19 +112,22 @@ void createAndWriteIfNotExists(const char* filePath) {
             close(fd);
             return; // 写入失败
         }
-
+        if(fd != -1)
+        {
+            close(fd);
+        }
         printf("文件不存在，已创建并写入long类型的0。\n");
     } else {
         printf("文件已存在。\n");
     }
 
-    if (fd != -1) {
-        close(fd); // 关闭文件描述符
-    }
+    //if (fd != -1) {
+    //    close(fd); // 关闭文件描述符
+   //}
 }
 
 
-int recvFile(int sockfd, const char* sha1) {
+int recvFile(int sockfd, const char *sha1, const char *real_file_name) {
     char filename[256] = {0};
     long fileSize;
     off_t offset = 0;
@@ -157,7 +160,7 @@ int recvFile(int sockfd, const char* sha1) {
 
     //检查本地文件是否有以前的传输记录，如果没有就创建
     char fileRecord[256] = {0};
-    sprintf(fileRecord, "%s.offset", filename);
+    sprintf(fileRecord, "%s.offset", real_file_name);
     createAndWriteIfNotExists(fileRecord);
 
     //从服务端接收文件大小  3
@@ -167,7 +170,7 @@ int recvFile(int sockfd, const char* sha1) {
     }
     printf("recved file size = %ld\n", fileSize);
 
-    int fd = open(filename, O_RDWR | O_CREAT, 0666);
+    int fd = open(real_file_name, O_RDWR | O_CREAT, 0666);
     if (fd == -1) {
         perror("Unable to open file");
         return -1;
@@ -180,12 +183,12 @@ int recvFile(int sockfd, const char* sha1) {
     } 
 
     //向服务端发送偏移量  4  握手完毕
-    offset = updateOffsetRecord(filename, -1, 0);
+    offset = updateOffsetRecord(real_file_name, -1, 0);
     printf("offset = %ld\n", offset);
     sendn(sockfd, &offset, sizeof(offset));
 
     if (offset >= fileSize) {
-        updateOffsetRecord(filename, 0, 1);
+        updateOffsetRecord(real_file_name, 0, 1);
         close(fd);
         printf("File already completely received, skipping download.\n");
         return 0;
@@ -209,13 +212,13 @@ int recvFile(int sockfd, const char* sha1) {
         recv_count++;
         printf("recv once! recv size = %ld, count = %d\n", receivedBytes, recv_count);
         offset += receivedBytes;
-        updateOffsetRecord(filename, offset, 0);
+        updateOffsetRecord(real_file_name, offset, 0);
 
         // 此处不再需要手动进行数据写入操作，因为mmap映射会自动同步到文件
     }
 
     munmap(mapped, fileSize);
-    updateOffsetRecord(filename, 0, 1); // 传输完成后，清理记录文件
+    updateOffsetRecord(real_file_name, 0, 1); // 传输完成后，清理记录文件
     flock(fd, LOCK_UN);
 
     printf("File successfully received.\n");
@@ -226,7 +229,8 @@ int recvFile(int sockfd, const char* sha1) {
 
 int sendFile(int sockfd, const char *sha1)
 {
-    //从客户端接收文件名  1
+    //从客户端接收文件名  1i
+    //sha1 是sha1值
     printf("0.0\n");
     train_t file_name_train;
     recvn(sockfd, &file_name_train.size, sizeof(file_name_train.size));
@@ -243,6 +247,7 @@ int sendFile(int sockfd, const char *sha1)
     char filename[256] = {0};
     sprintf(filename, "%s" , temp_filename);
     
+    printf("fbr gets.c 247\n");
 
 
     //打开文件, 向客户端发送错误信息   2
@@ -323,7 +328,7 @@ int server_send(MYSQL *conn, dirStackType *dirStk, const char *file_name, int so
     }
 
     int file_ids[1024];
-    printf("file_pre_id = %d\n");
+    printf("file_pre_id = %d\n", file_pre_id);
     int nums = findFilesByPreId(conn, file_pre_id, file_ids);
 
     if(nums == 0)
@@ -421,6 +426,8 @@ int client_download(int sockfd, const char *file_name)
         return -1;
     }
 
-    recvFile(sockfd, file_name);
+    recvFile(sockfd, file_name, file_name);
+
+    return 0;
 }
 
